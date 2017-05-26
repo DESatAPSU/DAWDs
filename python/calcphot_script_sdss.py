@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+# This script calculated the synthetic magnitudes using iraf.calcphot for WD models using SDSS filters.
+
+# Line 18 should be changed to the path containing the models. 
+
 import sys
 import glob
 import os
@@ -11,7 +15,7 @@ iraf.stsdas()
 iraf.hst_calib()
 iraf.synphot()
 
-modelDirName='/home/deborahgulledge/Fermilab/TremblayModels/ExtinctionStuff/Set4/Data/Reddened'
+modelDirName='/Users/jacob/FermilabData/WDModels/TremblayModels/20170515/models/reddened_models'
 
 # move to model location...
 os.chdir(modelDirName)
