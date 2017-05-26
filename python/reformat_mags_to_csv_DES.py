@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
-# This script takes the calcphot results (fits files) from the WD models and organizes the data in a CSV file.
-# Run this from the directory containing the .fits files of interest.
+# This script takes the DES synthetic photometry calcphot results (fits files) from the WD models and organizes the data in a CSV file.
+# This should be run in a directory contaning subdirectores of the WDs organized by name. For example:
+# jacobs-air-2:DirContainingSubDirectories jacob$ ls
+# SSSJ0005-0127	 SSSJ0057-4914	SSSJ0206-4159	SSSJ0243p0119	SSSJ0515-3224
 
-#!/usr/bin/env python
+# This script is for the 20170515 set, modification is required on lines 17, 
 
 import numpy as np
 import pandas as pd
