@@ -46,6 +46,7 @@ def createFermiGridScriptForWDmodel(args):
 
     import os
     import sys
+    import stat
     import datetime
 
     # Upper-level directory under which the .flm files go
@@ -122,6 +123,10 @@ def createFermiGridScriptForWDmodel(args):
 
     fout.close()
 
+    # Ensure scriptName is executable (by user, by group, and by others)...
+    os.chmod(scriptName, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+
+    
     print "To submit this script to FermiGrid, run the following command:"
     outputLine = """jobsub_submit -G des --resource-provides=usage_model=DEDICATED -M --OS=SL6 --expected-lifetime=12h file://%s""" % (scriptName)
     print outputLine
