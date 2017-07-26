@@ -124,7 +124,7 @@ def createFermiGridScriptForWDmodel(args):
     fout.close()
 
     # Ensure scriptName is executable (by user, by group, and by others)...
-    os.chmod(scriptName, stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
+    os.chmod(scriptName, 0775)
 
     
     print "To submit this script to FermiGrid, run the following command:"
