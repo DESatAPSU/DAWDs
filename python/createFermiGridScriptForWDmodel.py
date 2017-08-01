@@ -1,7 +1,9 @@
 #!/usr/bin/env python
 
 # Authors:   Douglas Tucker and Deborah Gulledge
-# Date:      26 July 2017
+#
+# Updated:    1 Aug 2017
+# Created:   26 July 2017
 
 
 """
@@ -115,7 +117,7 @@ def createFermiGridScriptForWDmodel(args):
     fout.write("""ifdh cp -D """+specFullPathName+""" .\n""")
     fout.write("""\n""")
     fout.write("""mkdir """+outputDirName+"""\n""")
-    fout.write("""fit_WDmodel --specfile """+specFileName+""" --ignorephot --redo --outroot """+outputDirName+""" --ntemps 5 --nwalkers 100 --nprod 5000 --samptype pt\n""")
+    fout.write("""fit_WDmodel --specfile """+specFileName+""" --ignorephot --redo --outroot """+outputDirName+""" --ntemps 5 --nwalkers 100 --nprod 5000 --samptype pt --thin 10\n""")
     fout.write("""\n""")
     fout.write("""tar cvzf """+outputTarFile+""" """+outputDirName+"""\n""")
     fout.write("""ifdh cp -D """+outputTarFile+""" /pnfs/des/persistent/WDmodel/output\n""")
