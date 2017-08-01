@@ -125,6 +125,9 @@ def createFermiGridScriptForWDmodel(args):
 
     fout.close()
 
+    # Ensure scriptName is executable (by user, by group, and by others)...
+    os.chmod(scriptName, 0775)
+
     print "Ensure the script is executable, and, then, to submit it to "
     print "FermiGrid, run the following command: "
     outputLine = """jobsub_submit -G des --resource-provides=usage_model=DEDICATED -M --OS=SL6 --expected-lifetime=12h file://%s""" % (scriptName)
