@@ -49,7 +49,9 @@ def wdmodel_extract_bestfit_model_from_hdf5(args):
     import pandas as pd
     import h5py
 
-    with h5py.File(fn,'r') as fin:
+    inputFile = args.hdf5File
+
+    with h5py.File(inputFile,'r') as fin:
         xyz = fin['model']
         wave = xyz['wave'].value.astype('float64')
         flux = xyz['flux'].value.astype('float64')
@@ -62,6 +64,7 @@ def wdmodel_extract_bestfit_model_from_hdf5(args):
                    axis=1, 
                    keys=['wave','flux','flux_err'])
 
+    outputFile = args.outputCSVFile
     df.to_csv(outputFile,index=False)
 
 
