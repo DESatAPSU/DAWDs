@@ -50,16 +50,16 @@ def wdmodel_extract_bestfit_model_from_hdf5(args):
     import pandas as pd
     import json
 
-    # maindir is the upper level directory.
+    # mainDir is the upper level directory.
     # The "glob.glob" command looks for files with names ending in "_result.json"
-    #  in all the sub-sub-directories of maindir.
+    #  in all the sub-sub-directories of mainDir.
     # Note that, as currently written, files with names ending in "_result.json"
-    #  that are NOT in a subdirectory two levels down from maindir will NOT be
+    #  that are NOT in a subdirectory two levels down from mainDir will NOT be
     #  found.  I.e., as currently written, the "glob.glob" command below expects
     #  a certain directory structure under the main directory, in order to find
     #  the "_result.json" files...
-    maindir = args.maindir
-    fileList = glob.glob(maindir+'/*/*/*_result.json')
+    mainDir = args.mainDir
+    fileList = glob.glob(mainDir+'/*/*/*_result.json')
     
     outputFile = args.outputCSVFile
     fout = open(outputFile, 'w')
