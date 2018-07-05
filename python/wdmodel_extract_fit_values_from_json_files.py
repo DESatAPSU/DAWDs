@@ -23,8 +23,8 @@ def main():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(description=__doc__, \
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument('--hdf5File', \
-                        help='name of the WDmodel full_model file')
+    parser.add_argument('--mainDir', \
+                        help='name of the upper-level WDmodel results directory under which to search for result.json files')
     parser.add_argument('--outputCSVFile', \
                         help='name of the CSV file to output')
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', \
