@@ -33,15 +33,15 @@ def main():
 
     if args.verbose > 0: print args
 
-    status = wdmodel_extract_bestfit_model_from_hdf5(args)
+    status = wdmodel_extract_fit_values_from_json_files(args)
     
     return status
 
 
 ##################################
-# wdmodel_extract_bestfit_model_from_hdf5
+# wdmodel_extract_fit_values_from_json_files
 
-def wdmodel_extract_bestfit_model_from_hdf5(args):
+def wdmodel_extract_fit_values_from_json_files(args):
 
     import sys
     import os
@@ -83,7 +83,7 @@ def wdmodel_extract_bestfit_model_from_hdf5(args):
             for index in df_json.index:
                 outputLine = """%s,%s,%s_errp,%s_errm,%s_fixed""" % (outputLine,index,index,index,index)
             outputLine = "name"+outputLine
-            if verbose > 0:  print outputLine
+            if args.verbose > 0:  print outputLine
             fout.write(outputLine+'\n')
             iflag = 1
         
@@ -98,7 +98,7 @@ def wdmodel_extract_bestfit_model_from_hdf5(args):
             outputLine = """%s,%g,%g,%g,%d""" % (outputLine, value, error_p, error_m, fixed)
         outputLine = name+outputLine
         fout.write(outputLine+'\n')
-        if verbose > 0:  print outputLine
+        if args.verbose > 0:  print outputLine
     
 
     fout.close()
