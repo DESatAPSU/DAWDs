@@ -2,7 +2,7 @@
 
 # Authors:   Douglas Tucker and Deborah Gulledge
 #
-# Updated:    9 July 2018, 1 Aug 2017
+# Updated:    10 July 2018, 9 July 2018, 1 Aug 2017
 # Created:   26 July 2017
 
 
@@ -162,7 +162,7 @@ def createFermiGridScriptForWDmodel(args):
 
     print "Ensure the script is executable, and, then, to submit it to "
     print "FermiGrid, run the following command: "
-    outputLine = """jobsub_submit -G des --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE -M --OS=SL6 --expected-lifetime=12h file://%s""" % (scriptName)
+    outputLine = """jobsub_submit -G des --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE -M --OS=SL6 --expected-lifetime=24h file://%s""" % (scriptName)
     print outputLine
     
     return 0
