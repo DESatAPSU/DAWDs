@@ -13,7 +13,7 @@
 
     createFermiGridScriptForWDmodel.py --help
 
-    createFermiGridScriptForWDmodel.py --specRelPathName SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm --verbose 2
+    createFermiGridScriptForWDmodel.py --specRelPathName SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm --pnfsOutDir /pnfs/des/persistent/WDmodel/output/SOAR4m/JohnMarriner --verbose 2
 
     """
 
@@ -30,6 +30,9 @@ def main():
     parser.add_argument('--specRelPathName', \
                         help='name spectrum .flm file in /pnfs/des/persistent/WDmodel/Spectra', \
                         default='SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm')
+    parser.add_argument('--pnfsOutDir', \
+                        help='name of pnfs output directory', \
+                        default='/pnfs/des/persistent/WDmodel/output')
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', \
                         default=0, type=int)
     args = parser.parse_args()
@@ -88,6 +91,9 @@ def createFermiGridScriptForWDmodel(args):
     
     # Create name of script to be submitted to FermiGrid...
     scriptName = """wdmodel_%s_%s.sh""" % (specName,tstamp)
+
+    # Grab name of pnfs output directory...
+    pnfsOutDir = args.pnfsOutDir
 
     # Create and save contents of scriptName...
     fout = open(scriptName,'w')
@@ -149,7 +155,8 @@ def createFermiGridScriptForWDmodel(args):
     fout.write("""tar cvzf """+outputTarFile+""" """+outputDirName+"""\n""")
     fout.write("""\n""")
     fout.write("""# Copy tar file to PNFS:\n""")
-    fout.write("""ifdh cp -D """+outputTarFile+""" /pnfs/des/persistent/WDmodel/output\n""")
+    #fout.write("""ifdh cp -D """+outputTarFile+""" /pnfs/des/persistent/WDmodel/output\n""")
+    fout.write("""ifdh cp -D """+outputTarFile+""" """+pnfsOutDir+"""\n""")
     fout.write("""\n""")
     fout.write("""# Suggestion from A Drlica-Wagner and B Yanny:\n""")
     fout.write("""export HOME=$OLDHOME\n""")
