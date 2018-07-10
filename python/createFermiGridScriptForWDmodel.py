@@ -2,7 +2,7 @@
 
 # Authors:   Douglas Tucker and Deborah Gulledge
 #
-# Updated:    1 Aug 2017
+# Updated:    9 July 2018, 1 Aug 2017
 # Created:   26 July 2017
 
 
@@ -91,16 +91,36 @@ def createFermiGridScriptForWDmodel(args):
 
     # Create and save contents of scriptName...
     fout = open(scriptName,'w')
-
     fout.write("""#!/bin/bash\n""")
     fout.write("""\n""")
-    fout.write("""source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh\n""")
+    fout.write("""# Suggestion from A Drlica-Wagner and B Yanny:\n""")
+    fout.write("""OLDHOME=$HOME\n""")
+    fout.write("""export HOME=$PWD\n""")
+    fout.write("""\n""")
+    fout.write("""# Grabbed the following block from\n""")
+    fout.write("""#  /cvmfs/des.opensciencegrid.org/users/kadrlica/gridsetup.sh\n""")
+    fout.write("""export PRODUCTS=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/\n""")
+    fout.write("""export PATH=$PATH:$PRODUCTS/cpn/v1_7/NULL/bin\n""")
+    # Strictly speaking, should not need jobsub_client *within* grid process...
+    fout.write("""export PATH=$PATH:$PRODUCTS/jobsub_client/v1_1_9_1/NULL/\n""")
+    # Ken Herner recommends using ifdhc v2_1_0 or newer:
+    #fout.write("""export PATH=$PATH:$PRODUCTS/ifdhc/v2_0_1/Linux64bit-2-6-2-12/bin\n""")
+    #fout.write("""export PYTHONPATH=$PYTHONPATH:$PRODUCTS/ifdhc/v2_0_1/Linux64bit-2-6-2-12/lib/python\n""")
+    fout.write("""export PATH=$PATH:$PRODUCTS/ifdhc/v1_8_9/Linux64bit-2-6-2-12/bin\n""")
+    fout.write("""export PYTHONPATH=$PYTHONPATH:$PRODUCTS/ifdhc/v1_8_2/Linux64bit-2-6-2-12/lib/python\n""")
+    # Strictly speaking, should not need jobsub_client *within* grid process...
+    fout.write("""export PYTHONPATH=$PYTHONPATH:$PRODUCTS/jobsub_client/v1_1_3/NULL\n""")
+    fout.write("""export IFDH_NO_PROXY=1\n""")
+    fout.write("""\n""")
+    fout.write("""# Copy synphot tar files from PNFS:\n""")
     fout.write("""ifdh cp -D /pnfs/des/persistent/WDmodel/SynphotData/synphot1.tar.gz .\n""")
     fout.write("""ifdh cp -D /pnfs/des/persistent/WDmodel/SynphotData/synphot2.tar.gz .\n""")
     fout.write("""ifdh cp -D /pnfs/des/persistent/WDmodel/SynphotData/synphot3.tar.gz .\n""")
     fout.write("""ifdh cp -D /pnfs/des/persistent/WDmodel/SynphotData/synphot4.tar.gz .\n""")
     fout.write("""ifdh cp -D /pnfs/des/persistent/WDmodel/SynphotData/synphot5.tar.gz .\n""")
     fout.write("""ifdh cp -D /pnfs/des/persistent/WDmodel/SynphotData/synphot6.tar.gz .\n""")
+    fout.write("""\n""")
+    fout.write("""# Extract data from synphot tar files:\n""")
     fout.write("""tar xzf synphot1.tar.gz\n""")
     fout.write("""tar xzf synphot2.tar.gz\n""")
     fout.write("""tar xzf synphot3.tar.gz\n""")
@@ -108,19 +128,31 @@ def createFermiGridScriptForWDmodel(args):
     fout.write("""tar xzf synphot5.tar.gz\n""")
     fout.write("""tar xzf synphot6.tar.gz\n""")
     fout.write("""\n""")
+    fout.write("""# Activate WDmodel conda environment:\n""")
     fout.write("""export CONDA_DIR=/cvmfs/des.opensciencegrid.org/fnal/anaconda2/\n""")
     fout.write("""export PATH=$CONDA_DIR/bin:$PATH\n""")
     fout.write("""source activate WDmodel\n""")
     fout.write("""\n""")
+    fout.write("""# Point PYSYN_CDBS environment variable to the synphot CDBS data directory:\n""")
     fout.write("""export PYSYN_CDBS=./grp/hst/cdbs\n""")
     fout.write("""\n""")
+    fout.write("""# Copy FLM spectrum file:\n""")
     fout.write("""ifdh cp -D """+specFullPathName+""" .\n""")
     fout.write("""\n""")
+    fout.write("""# Create output directory:\n""")
     fout.write("""mkdir """+outputDirName+"""\n""")
+    fout.write("""\n""")
+    fout.write("""# Run fit_WDmodel:\n""")
     fout.write("""fit_WDmodel --specfile """+specFileName+""" --ignorephot --redo --outroot """+outputDirName+""" --ntemps 5 --nwalkers 100 --nprod 5000 --samptype pt --thin 10\n""")
     fout.write("""\n""")
+    fout.write("""# Tar up results from the fit:\n""")
     fout.write("""tar cvzf """+outputTarFile+""" """+outputDirName+"""\n""")
+    fout.write("""\n""")
+    fout.write("""# Copy tar file to PNFS:\n""")
     fout.write("""ifdh cp -D """+outputTarFile+""" /pnfs/des/persistent/WDmodel/output\n""")
+    fout.write("""\n""")
+    fout.write("""# Suggestion from A Drlica-Wagner and B Yanny:\n""")
+    fout.write("""export HOME=$OLDHOME\n""")
     fout.write("""\n""")
 
     fout.close()
@@ -130,7 +162,7 @@ def createFermiGridScriptForWDmodel(args):
 
     print "Ensure the script is executable, and, then, to submit it to "
     print "FermiGrid, run the following command: "
-    outputLine = """jobsub_submit -G des --resource-provides=usage_model=DEDICATED -M --OS=SL6 --expected-lifetime=12h file://%s""" % (scriptName)
+    outputLine = """jobsub_submit -G des --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE -M --OS=SL6 --expected-lifetime=12h file://%s""" % (scriptName)
     print outputLine
     
     return 0
