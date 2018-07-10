@@ -13,7 +13,7 @@
 
     createFermiGridScriptForWDmodel.py --help
 
-    createFermiGridScriptForWDmodel.py --specRelPathName SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm --pnfsOutDir /pnfs/des/persistent/WDmodel/output/SOAR4m/JohnMarriner --verbose 2
+    createFermiGridScriptForWDmodel.py --specRelPathName SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm --outDirRelPathName SOAR4m/JohnMarriner --verbose 2
 
     """
 
@@ -30,9 +30,9 @@ def main():
     parser.add_argument('--specRelPathName', \
                         help='name spectrum .flm file in /pnfs/des/persistent/WDmodel/Spectra', \
                         default='SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm')
-    parser.add_argument('--pnfsOutDir', \
-                        help='name of pnfs output directory', \
-                        default='/pnfs/des/persistent/WDmodel/output')
+    parser.add_argument('--outDirRelPathName', \
+                        help='relative path of output directory in /pnfs/des/persistent/WDmodel/output', \
+                        default='SOAR4m/JohnMarriner')
     parser.add_argument('--verbose', help='verbosity level of output to screen (0,1,2,...)', \
                         default=0, type=int)
     args = parser.parse_args()
@@ -52,18 +52,24 @@ def createFermiGridScriptForWDmodel(args):
     import os
     import sys
     import stat
-    import datetime
+    import datetime    
 
-    # Upper-level directory under which the .flm files go
+    # Upper-level pnfs directory under which the .flm files go
     # (perhaps several sub-directories down)...
     pnfsSpecDir = '/pnfs/des/persistent/WDmodel/Spectra'
     
-    # Extract values for specRelPathName and verbose from args...
-    #  E.g., specRelPathName='SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm' and verbose=2
+    # Upper-level pnfs directory under which the output files go
+    # (perhaps several sub-directories down)...
+    pnfsOutDir = '/pnfs/des/persistent/WDmodel/output'
+
+    # Extract values for specRelPathName, outDirRelPathName, and verbose from args...
+    #  E.g., specRelPathName='SOAR4m/JohnMarriner/SSSJ0203-0459_sum.flm',
+    #        outDirRelPathName='SOAR4m/JohnMarriner', and verbose=2
     specRelPathName = args.specRelPathName
+    outDirRelPathName = args.outDirRelPathName
     verbose = args.verbose
     
-    # Build full path name from pnfsSpecDir and specRelPathName...
+    # Build full spectra dir path name from pnfsSpecDir and specRelPathName...
     specFullPathName = os.path.join(pnfsSpecDir, specRelPathName)
 
     #if (not os.path.isfile(specFullPathName)):
@@ -79,21 +85,27 @@ def createFermiGridScriptForWDmodel(args):
     #  E.g., specName='SSSJ0203-0459_sum'
     specName = os.path.splitext(specFileName)[0]
 
+    # Build full pnfs output dir path name from pnfsOutDir and outDirRelPathName...
+    outDirFullPathName = os.path.join(pnfsOutDir, outDirRelPathName)
+
+    #if (not os.path.isfile(outDirFullPathName)):
+    #    print """Can't find %s""" % (outDirFullPathName)
+    #    print 'Exiting now...'
+    #    return 1
+    
     # Create a timestamp in the form "YYYYMMDD_hhmmss"...
     #  E.g., 20170726_150104
     tstamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
 
-    # Create FermiGrid output directory name
-    outputDirName = """out_%s_%s""" % (specName,tstamp)
+    # Create FermiGrid local machine output directory name
+    localOutputDirName = """out_%s_%s""" % (specName,tstamp)
 
     # Create name of Fermilab output tar file...
-    outputTarFile = """%s.tar.gz""" % (outputDirName)
+    outputTarFile = """%s.tar.gz""" % (localOutputDirName)
     
     # Create name of script to be submitted to FermiGrid...
     scriptName = """wdmodel_%s_%s.sh""" % (specName,tstamp)
 
-    # Grab name of pnfs output directory...
-    pnfsOutDir = args.pnfsOutDir
 
     # Create and save contents of scriptName...
     fout = open(scriptName,'w')
@@ -146,17 +158,17 @@ def createFermiGridScriptForWDmodel(args):
     fout.write("""ifdh cp -D """+specFullPathName+""" .\n""")
     fout.write("""\n""")
     fout.write("""# Create output directory:\n""")
-    fout.write("""mkdir """+outputDirName+"""\n""")
+    fout.write("""mkdir """+localOutputDirName+"""\n""")
     fout.write("""\n""")
     fout.write("""# Run fit_WDmodel:\n""")
-    fout.write("""fit_WDmodel --specfile """+specFileName+""" --ignorephot --redo --outroot """+outputDirName+""" --ntemps 5 --nwalkers 100 --nprod 5000 --samptype pt --thin 10\n""")
+    fout.write("""fit_WDmodel --specfile """+specFileName+""" --ignorephot --redo --outroot """+localOutputDirName+""" --ntemps 5 --nwalkers 100 --nprod 5000 --samptype pt --thin 10\n""")
     fout.write("""\n""")
     fout.write("""# Tar up results from the fit:\n""")
-    fout.write("""tar cvzf """+outputTarFile+""" """+outputDirName+"""\n""")
+    fout.write("""tar cvzf """+outputTarFile+""" """+localOutputDirName+"""\n""")
     fout.write("""\n""")
     fout.write("""# Copy tar file to PNFS:\n""")
     #fout.write("""ifdh cp -D """+outputTarFile+""" /pnfs/des/persistent/WDmodel/output\n""")
-    fout.write("""ifdh cp -D """+outputTarFile+""" """+pnfsOutDir+"""\n""")
+    fout.write("""ifdh cp -D """+outputTarFile+""" """+outDirFullPathName+"""\n""")
     fout.write("""\n""")
     fout.write("""# Suggestion from A Drlica-Wagner and B Yanny:\n""")
     fout.write("""export HOME=$OLDHOME\n""")
