@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-# Authors:   Douglas Tucker and Deborah Gulledge
+# Authors:   Douglas Tucker, Deborah Gulledge, Brian Yanny
 #
-# Updated:    10 July 2018, 9 July 2018, 1 Aug 2017
+# Updated:   16 July, 10 July 2018, 9 July 2018, 1 Aug 2017
 # Created:   26 July 2017
 
 
@@ -67,7 +67,7 @@ def createFermiGridScriptForWDmodel(args):
     #        outDirRelPathName='SOAR4m/JohnMarriner', and verbose=2
     specRelPathName = args.specRelPathName
     outDirRelPathName = args.outDirRelPathName
-    verbose = args.verbose
+
     
     # Build full spectra dir path name from pnfsSpecDir and specRelPathName...
     specFullPathName = os.path.join(pnfsSpecDir, specRelPathName)
@@ -104,31 +104,21 @@ def createFermiGridScriptForWDmodel(args):
     outputTarFile = """%s.tar.gz""" % (localOutputDirName)
     
     # Create name of script to be submitted to FermiGrid...
-    scriptName = """wdmodel_%s_%s.sh""" % (specName,tstamp)
+    executableName = """wdmodel_%s_%s.sh""" % (specName,tstamp)
 
-
-    # Create and save contents of scriptName...
-    fout = open(scriptName,'w')
+    # Create and save contents of executableName...
+    fout = open(executableName,'w')
     fout.write("""#!/bin/bash\n""")
     fout.write("""\n""")
     fout.write("""# Suggestion from A Drlica-Wagner and B Yanny:\n""")
     fout.write("""OLDHOME=$HOME\n""")
     fout.write("""export HOME=$PWD\n""")
     fout.write("""\n""")
-    fout.write("""# Grabbed the following block from\n""")
-    fout.write("""#  /cvmfs/des.opensciencegrid.org/users/kadrlica/gridsetup.sh\n""")
-    fout.write("""export PRODUCTS=/cvmfs/fermilab.opensciencegrid.org/products/common/prd/\n""")
-    fout.write("""export PATH=$PATH:$PRODUCTS/cpn/v1_7/NULL/bin\n""")
-    # Strictly speaking, should not need jobsub_client *within* grid process...
-    fout.write("""export PATH=$PATH:$PRODUCTS/jobsub_client/v1_1_9_1/NULL/\n""")
-    # Ken Herner recommends using ifdhc v2_1_0 or newer:
-    #fout.write("""export PATH=$PATH:$PRODUCTS/ifdhc/v2_0_1/Linux64bit-2-6-2-12/bin\n""")
-    #fout.write("""export PYTHONPATH=$PYTHONPATH:$PRODUCTS/ifdhc/v2_0_1/Linux64bit-2-6-2-12/lib/python\n""")
-    fout.write("""export PATH=$PATH:$PRODUCTS/ifdhc/v1_8_9/Linux64bit-2-6-2-12/bin\n""")
-    fout.write("""export PYTHONPATH=$PYTHONPATH:$PRODUCTS/ifdhc/v1_8_2/Linux64bit-2-6-2-12/lib/python\n""")
-    # Strictly speaking, should not need jobsub_client *within* grid process...
-    fout.write("""export PYTHONPATH=$PYTHONPATH:$PRODUCTS/jobsub_client/v1_1_3/NULL\n""")
-    fout.write("""export IFDH_NO_PROXY=1\n""")
+    fout.write("""# Setup EEUPS:\n""")
+    fout.write("""source /cvmfs/des.opensciencegrid.org/eeups/startupcachejob21i.sh\n""")
+    fout.write("""\n""")
+    fout.write("""# Print out environment variables (in case of debugging):\n""")
+    fout.write("""printenv\n""")
     fout.write("""\n""")
     fout.write("""# Copy synphot tar files from PNFS:\n""")
     fout.write("""ifdh cp -D /pnfs/des/persistent/WDmodel/SynphotData/synphot1.tar.gz .\n""")
@@ -161,27 +151,72 @@ def createFermiGridScriptForWDmodel(args):
     fout.write("""mkdir """+localOutputDirName+"""\n""")
     fout.write("""\n""")
     fout.write("""# Run fit_WDmodel:\n""")
-    fout.write("""fit_WDmodel --specfile """+specFileName+""" --ignorephot --redo --outroot """+localOutputDirName+""" --ntemps 5 --nwalkers 100 --nprod 5000 --samptype pt --thin 10\n""")
+    fout.write("""mpirun -np 8 fit_WDmodel --specfile """+specFileName+""" --ignorephot --redo --outroot """+localOutputDirName+""" --ntemps 5 --nwalkers 100 --nprod 5000 --samptype pt --thin 10 --mpi\n""")
     fout.write("""\n""")
     fout.write("""# Tar up results from the fit:\n""")
     fout.write("""tar cvzf """+outputTarFile+""" """+localOutputDirName+"""\n""")
     fout.write("""\n""")
     fout.write("""# Copy tar file to PNFS:\n""")
-    #fout.write("""ifdh cp -D """+outputTarFile+""" /pnfs/des/persistent/WDmodel/output\n""")
     fout.write("""ifdh cp -D """+outputTarFile+""" """+outDirFullPathName+"""\n""")
     fout.write("""\n""")
+
+    fout.write("""# NEW:  Delete extraneous files/directories on grid host:\n""")
+    fout.write("""rm -f synphot?.tar.gz\n""")
+    fout.write("""rm -rf ./grp\n""")
+    fout.write("""rm -f """+outputTarFile+"""\n""")
+    fout.write("""rm -rf """+localOutputDirName+"""\n""")
+    fout.write("""\n""")
+
     fout.write("""# Suggestion from A Drlica-Wagner and B Yanny:\n""")
     fout.write("""export HOME=$OLDHOME\n""")
     fout.write("""\n""")
 
     fout.close()
 
-    # Ensure scriptName is executable (by user, by group, and by others)...
-    os.chmod(scriptName, 0775)
+    # Ensure executableName is executable (by user, by group, and by others)...
+    os.chmod(executableName, 0775)
 
-    print "Ensure the script is executable, and, then, to submit it to "
-    print "FermiGrid, run the following command: "
-    outputLine = """jobsub_submit -G des --resource-provides=usage_model=DEDICATED,OPPORTUNISTIC,OFFSITE -M --OS=SL6 --expected-lifetime=48h file://%s""" % (scriptName)
+
+    # Create name of the condor submit script...
+    condorSubmitScriptName = """submit_%s_%s""" % (specName,tstamp)
+
+    # Create name of the script log file name...
+    logName = """wdmodel_%s_%s.log""" % (specName,tstamp)
+
+    # Create name of the script err log file name...
+    errorlogName = """wdmodel_%s_%s.err""" % (specName,tstamp)
+
+    # Create name of the script output file name...
+    outputName = """wdmodel_%s_%s.out""" % (specName,tstamp)
+
+    # Create and save contents of condorSubmitScriptName...
+    fout = open(condorSubmitScriptName,'w')
+    fout.write("""universe   = grid\n""")
+    fout.write("""grid_resource = condor gpce04.fnal.gov gpce04.fnal.gov:9619\n""")
+    fout.write("""executable = """+executableName+"""\n""")
+    fout.write("""output = """+outputName+"""\n""")
+    fout.write("""error = """+errorlogName+"""\n""")
+    fout.write("""log = """+logName+"""\n""")
+    fout.write("""#This is the RAM memory request (in 2 places) this is total for all 8 cores\n""")
+    fout.write("""request_memory = 32 GB\n""")
+    fout.write("""+maxMemory=32000\n""")
+    fout.write("""#This is the cpu/core count (8 in this case)\n""")
+    fout.write("""+xcount=8\n""")
+    fout.write("""+JobClass="DES"\n""")
+    fout.write("""Requirements = Target.IsDESNode == True\n""")
+    fout.write("""#This is the scratch disk allocation\n""")
+    fout.write("""request_disk = 50 GB\n""")
+    fout.write("""ShouldTransferFiles = YES\n""")
+    fout.write("""WhenToTransferOutput = ON_EXIT\n""")
+    fout.write("""use_x509userproxy = true\n""")
+    fout.write("""+Owner=undefined\n""")
+    fout.write("""Queue\n""")
+    fout.close()
+
+
+    print "Ensure the ", executableName, "script is executable" 
+    print "and, then, to submit it to FermiGrid, run the following command: "
+    outputLine = """condor_submit %s""" % (condorSubmitScriptName)
     print outputLine
     
     return 0
